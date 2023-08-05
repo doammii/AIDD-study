@@ -147,8 +147,8 @@ TOX 21 dataset으로 실험 + ROC-AUC score로 결과 분석
 
 ---
 
-![Untitled](SCFP%20bdbb0cdf0b0e467d82cf99ca6f65ef7a/Untitled.png)
-![Untitled](SCFP%20bdbb0cdf0b0e467d82cf99ca6f65ef7a/Untitled%201.png)
+![Untitled](https://github.com/doammii/CADD-study/assets/100724454/cfbcdce9-0122-4358-b48a-5cb43dfd94a7)
+![Untitled 1](https://github.com/doammii/CADD-study/assets/100724454/d917cfbf-0d0d-4644-a67d-31b67780e41e)
 
 ## Methods
 
@@ -160,7 +160,7 @@ SCFP가 이후의 fully-connected layers를 위한 input! 화합물을 위한 cl
 
 CNN에서 얻은 feature representation을 “chemical motif”의 형태로 추출
 
-![Untitled](SCFP%20bdbb0cdf0b0e467d82cf99ca6f65ef7a/Untitled%202.png)
+![Untitled 2](https://github.com/doammii/CADD-study/assets/100724454/ed1bb34c-5b1d-42b8-8f31-499d6648c520)
 
 ### SMILES notation for representing chemical compounds
 
@@ -178,7 +178,7 @@ ex) 아스피린
 
 → **Normalization algorithm**을 사용하여 하나의 SMILES representation이 하나의 화합물 표현하도록 보장 [**unique/canonical SMILES**]
 
-![Untitled](SCFP%20bdbb0cdf0b0e467d82cf99ca6f65ef7a/Untitled%203.png)
+![Untitled 3](https://github.com/doammii/CADD-study/assets/100724454/f23df13c-dd21-4f96-9c9c-b103aa036e31)
 
 ### SMILES feature matrix
 
@@ -221,7 +221,8 @@ ex) 아스피린
     
     window size of filters, number of filters 
     
-    ![Untitled](SCFP%20bdbb0cdf0b0e467d82cf99ca6f65ef7a/Untitled%204.png)
+    ![Untitled 4](https://github.com/doammii/CADD-study/assets/100724454/6003bf6a-b02a-4a35-b1bb-45318350cbe7)
+
     
 - SCFP를 fully connected layers의 input으로 사용 → prediction model
     - one hidden layer
@@ -260,7 +261,7 @@ dimension의 large value → large contribution of 대응되는 filter → 연�
 
 **“chemical motif”** : 연관된, 중요한 substructure
 
-![Untitled](SCFP%20bdbb0cdf0b0e467d82cf99ca6f65ef7a/Untitled%205.png)
+![Untitled 5](https://github.com/doammii/CADD-study/assets/100724454/e8655235-7064-49b6-ac6c-7f8b14786da4)
 
 chemical motifs의 분석 : 네트워크에 의한 **예측 결과의 해석(설명. interpretation)** 기능 향상
 
@@ -290,9 +291,10 @@ SCFP의 각 dimension : ~~다른 value scale~~ 가질 수도 있음 → dimensio
     
     Train / Test(validation) / Score(final evaluation) 데이터 타입으로 나뉨.
     
-    ![Untitled](SCFP%20bdbb0cdf0b0e467d82cf99ca6f65ef7a/Untitled%206.png)
+    ![Untitled 6](https://github.com/doammii/CADD-study/assets/100724454/432a0e77-a27c-4e6d-8f3b-7a731a24e992)
     
-    ![Untitled](SCFP%20bdbb0cdf0b0e467d82cf99ca6f65ef7a/Untitled%207.png)
+    ![Untitled 7](https://github.com/doammii/CADD-study/assets/100724454/6cfa0da8-bbd3-4fb9-a2f7-1ba07ab94b3b)
+
     
 
 Receiver operating characteristic curve(**ROC-AUC**) 아래 영역 → 모델의 performance 평가
@@ -313,10 +315,10 @@ TOX21 데이터셋의 Train, Test, Score data를 합쳐서 **하나의** 데이�
 - validation 위해 **ROC-AUC**를 측정하는 동안 300 epochs까지 훈련시킴.
     
     평균적으로 **Giga bytes** memory와 함꼐 36sec/epoch의 훈련 필요
-    
     ROC-AUC는 20 epochs 중심으로 수렴
     
-    ![Untitled](SCFP%20bdbb0cdf0b0e467d82cf99ca6f65ef7a/Untitled%208.png)
+    ![Untitled 8](https://github.com/doammii/CADD-study/assets/100724454/da743000-4a29-4609-825a-a06ee939a046)
+
     
 - 우리 모델과 Compound classification 문제의 전통적인 방법 비교 (**ROC-AUC**)
     
@@ -352,7 +354,8 @@ ECFP(length=1024, radius=2)를 사용한 유사 분석
 (SCFP의 expressive power : ECFP보다 강함 → SR-MMP subdatasets)
 > 
 
-![Untitled](SCFP%20bdbb0cdf0b0e467d82cf99ca6f65ef7a/Untitled%209.png)
+![Untitled 9](https://github.com/doammii/CADD-study/assets/100724454/e6ea7e40-6496-4fb0-8a33-3c6b17d38bf6)
+
 
 SCFP의 **차원 수**(64) : ECFP 차원 수(1024)보다 훨씬 작다.
 
@@ -372,7 +375,8 @@ CNN에 active compounds 적용 + chemical motifs detection
 
 motif analysis → chemical motifs를 NR-AR dataset의 중요한 substructures로서 해석(설명) 가능.
 
-![Untitled](SCFP%20bdbb0cdf0b0e467d82cf99ca6f65ef7a/Untitled%2010.png)
+![Untitled 10](https://github.com/doammii/CADD-study/assets/100724454/2795c2eb-f31e-4a90-94f1-46e7adbd30d8)
+
 
 ## Discussion
 
