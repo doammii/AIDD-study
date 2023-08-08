@@ -71,6 +71,10 @@ print(qed)
     - 8014 compounds/toxicity(label) ↔ 12 targets
         
         1 compound와 multiple targets 연결 → single-task learning과 multi-task learning으로 나뉨.
+        - 801 "dense features" that represent chemical descriptors, such as molecular weight, solubility or surface area
+        - 272,776 "sparse features" that represent chemical substructures (ECFP10, DFS6, DFS8; stored in Matrix Market Format)     
+        - Machine learning methods can use sparse or dense data or combine them. 
+        - For each sample there are 12 binary labels that represent the outcome (active/inactive) of 12 different toxicological experiments.
         
     - random split method (train, valid, test sets로 random하게 나눔.)
 - **SIDER** dataset
