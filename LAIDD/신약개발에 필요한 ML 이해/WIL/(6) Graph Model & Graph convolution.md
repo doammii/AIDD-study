@@ -122,7 +122,7 @@ from rdkit.Chem import Descriptors
 from rdkit import DataStructs
 import tensorflow as tf
 
-from deepchem.feat.mol_graphs import ConvMol
+from deepchem.feat.mol_graphs import **ConvMol**
 from deepchem.models.layers import GraphConv, GraphPool, GraphGather
 from deepchem.models.graph_models import GraphConvModel
 from sklearn.metrics import mean_absolute_error, r2_score, mean_squared_error
@@ -134,9 +134,155 @@ import tensorflow.keras.layers as layers
 
 ### 회귀 모델
 
+1. **데이터 다운로드 (logP 예측 : 알려진 실제 화합물의 분배계수로부터,유사한 화합물의 분배계수를 예측하는 데 사용)**
+    
+    featurizer 선택 / splitter 정한 후 GraphConvModel 함수로 모델 만들기
+    
+
+```python
+# 데이터 다운로드
+logP_data = pd.read_csv('https://raw.githubusercontent.com/StillWork/data/master/logP_dataset.csv', names=['smiles', 'logP'])
+print(logP_data.shape)
+
+# csv 파일로 저장
+logP_data[:4000].to_csv('logP.csv')
+# logP_data.to_csv('logP.csv')
+
+# **표현형을** 그래프 표현형인 **ConvMol로 선택**
+**featurizer** = dc.feat.**ConvMolFeaturizer**()
+
+# loader로 CSVLoader를 사용하면서 X, y, 표현형 등을 정의
+loader = dc.data.CSVLoader(tasks=["logP"], feature_field="smiles",featurizer=featurizer)
+dataset = loader.create_dataset('logP.csv')
+# (14610, 2)
+
+dataset.X.shape   #(4000, ) -> 목적 변수 y는 logP값.
+
+# Splitter 선택
+splitter = dc.splits.RandomSplitter()
+# splitter = dc.splits.ScaffoldSplitter()
+train_dataset, valid_dataset, test_dataset = splitter.train_valid_test_split(dataset)
+
+from deepchem.models.graph_models import GraphConvModel
+**model = GraphConvModel(n_tasks=1, mode='regression', batch_size=50,** 
+                       model_dir="./logP", random_seed=0)
+```
+
+1. **모델 학습**
+
+```python
+model.fit(train_dataset, nb_epoch=50)
+```
+
+1. **예측 결과 보기(샘플, 실제값)**
+
+```python
+def show_reg_result(y_test, y_pred, N=50):
+    mae = mean_absolute_error(y_test, y_pred)
+    rmse = mean_squared_error(y_test, y_pred, squared=False)
+    R2 = r2_score(y_test, y_pred)
+    max_err = np.abs(y_test - y_pred).max()
+    
+    print('R2:', round(R2,4))
+    print('MAE:', round(mae, 4))
+    print('RMSE:', round(rmse,4))
+    print('Max error:', round(max_err, 4))
+
+    # 일부 실제값과 예측값 샘플을 plot으로 비교하여 그려본다 (N 개)
+    
+    if N > 0:
+      plt.figure(figsize=(10, 6))
+      plt.plot(y_pred[:N], ".b-", label="prediction", linewidth=1.0)
+      plt.plot(y_test[:N], '.r-', label="actual", linewidth=1.0)
+      plt.legend()
+      plt.ylabel('logP')
+      plt.show()
+
+y_pred = model.predict(test_dataset)
+show_reg_result(test_dataset.y, y_pred)
+'''
+강의에서는 더 좋은 성능
+R2: 0.9134
+MAE: 0.2711
+RMSE: 0.3875
+Max error: 1.8576
+'''
+
+# 20개 샘플만 예측해보기 
+
+solubilities = model.predict_on_batch(test_dataset.X[:20])
+for molecule, solubility, test_solubility in zip(test_dataset.ids, solubilities, test_dataset.y):
+    print(solubility, test_solubility, molecule)
+'''
+[-0.3775419] [-0.5] CC(OO)OO
+[3.0686867] [2.6] [2H]C([2H])([2H])C([2H])([2H])CI
+'''
+```
+
+1. **모델 적용**
+
+```python
+# 임의의 샘플에 적용해보기
+smiles = ['COC(C)(C)CCCC(C)CC=CC(C)=CC(=O)OC(C)C',
+          'CCOC(=O)CC',
+          'CSc1nc(NC(C)C)nc(NC(C)C)n1',
+          'CC(C#C)N(C)C(=O)Nc1ccc(Cl)cc1',
+          'Cc1cc2ccccc2cc1C']
+
+mols = [Chem.MolFromSmiles(s) for s in smiles]
+
+featurizer = dc.feat.**ConvMolFeaturizer**()   # 중요
+
+x = featurizer.featurize(mols)
+predicted_solubility = model.predict_on_batch(x)
+for m,s in zip(smiles, predicted_solubility):
+    print()
+    print('Molecule:', m)
+    print('Predicted solubility:', s)
+```
+
+---
+
 ### ConvMol 구조
 
+분자의 그래프 표현형 종류 중 하나
+
+```python
+x[1]   # <deepchem.feat.mol_graphs.ConvMol at 0x7fedec1b19d0>
+
+# 두번째 분자 보기
+mol = Chem.MolFromSmiles("CCOC(=O)CC")
+
+# ConvMol 특성의 구조 (원자가 7이고, 특성 벡터수가 75임)
+x[1].atom_features.shape   => **feature matrix**
+x[1].get_atom_features()
+
+# 7개 원자의 인접 노드 번호들 보기
+x[1].get_adjacency_list()
+```
+
 ### 분류 모델
+
+- tox21 데이터 사용
+- featurizer='GraphConv' 적용
+
+**모델 정의, 학습, 평가**
+
+- GraphConvModel 모델 사용
+- 기본 모델 구조를 사용
+
+```python
+tasks, datasets, transformers = dc.molnet.load_tox21(featurizer='GraphConv')
+train_dataset, valid_dataset, test_dataset = datasets
+
+n_tasks = len(tasks)
+model_c = dc.models.GraphConvModel(n_tasks, mode='classification')
+model_c.fit(train_dataset, nb_epoch=50)
+metric1 = dc.metrics.Metric(dc.metrics.roc_auc_score)
+metric2 = dc.metrics.Metric(dc.metrics.accuracy_score)
+print('Training set score:', model_c.evaluate(train_dataset, [metric1, metric2], transformers))
+print('Test set score:', model_c.evaluate(test_dataset, [metric1, metric2], transformers))
+```
 
 ### GCN 직접 구현
 
@@ -191,7 +337,9 @@ gcn_model = dc.models.KerasModel(MyGraphConvModel(), loss=dc.models.losses.Categ
 test_dataset.X[0]
 ```
 
-입력 데이터 생성자
+**입력 데이터 생성자**
+
+[https://github.com/deepchem/deepchem/blob/master/deepchem/feat/mol_graphs.py](https://github.com/deepchem/deepchem/blob/master/deepchem/feat/mol_graphs.py)
 
 - 모델은 ndarray 타입의 어레이를 사용하므로 `ConvMol` 객체로부터 X, y, w 를 생성해 주는 함수가 필요하다
 - 배치단위로 데이터를 생성해야 한다
