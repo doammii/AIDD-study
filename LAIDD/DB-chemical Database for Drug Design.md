@@ -65,32 +65,43 @@ print(qed)
 
 ## Dataset 종류
 
-*FP2VEC paper 참고*
+*FP2VEC&SA-MTL paper 참고*
 
 - **Tox21** dataset
     - 8014 compounds/toxicity(label) ↔ 12 targets
         
         1 compound와 multiple targets 연결 → single-task learning과 multi-task learning으로 나뉨.
-        - 801 "dense features" that represent chemical descriptors, such as molecular weight, solubility or surface area
-        - 272,776 "sparse features" that represent chemical substructures (ECFP10, DFS6, DFS8; stored in Matrix Market Format)     
-        - Machine learning methods can use sparse or dense data or combine them. 
-        - For each sample there are 12 binary labels that represent the outcome (active/inactive) of 12 different toxicological experiments.
+        
+        ⇒ compound instance는 multiple class들로 태그될 수 있음 → **multi-task learning**
         
     - random split method (train, valid, test sets로 random하게 나눔.)
+        
+        train&test(random split) / score(ensemble)
+        
 - **SIDER** dataset
     - marketed drugs & ADR(adverse drug reactions/binary label) against 27 System-Organs Class 포함.
+        
+        SIDER dataset의 organizers도 NLP 사용하여 ADR 추
+        
     - 1427 data points ↔ 27 targets
-    - random split method + single/multi-task
+    - random split method + single/multi-task learning
+        
+        TOX21과 유사하게 compound instance는 multiple class들로 태그될 수 있음. → **multi-task learning**
+        
 - **HIV** dataset
     - experimental measurement of the ability to inhibit HIV replication
     - 41,127 compounds ↔ ability of inhibition with binary labels
-    - scaffold split method (two-dimensional molecular structures에 따라 3개의 sets로 나눔.)
+    - **scaffold** split method (two-dimensional molecular structures에 따라 3개의 sets로 나눔.)
         
-        **RDkit**에 의해 구현.
+        구조적으로 다른 분자들을 다른 train/test subset으로 분리. 얻은 결과는 분리.
         
+    - **RDkit**에 의해 구현.
 - **BBBP** dataset
-    - blood-brain barrier penetration with binary labels
+    - blood-brain barrier(nervous system 보호) penetration with binary labels
     - 2050 compounds
+        
+        특정 원자의 valence가 비정상적인 것들은 제거(filtering out)하는 과정 필요할 수도!
+        
     - scaffold split method
 - **ESOL** dataset
     - measurements of the water solubility of small compounds
@@ -115,3 +126,5 @@ print(qed)
     - Clean Energy Project - solar cell materials에 맞는 candidate molecules 포함
     - 29,978 compounds ↔ CEP values
     - random split method
+- **Clintox** dataset
+    - FDA-approved drug list + toxicity drug list
