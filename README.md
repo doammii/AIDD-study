@@ -9,6 +9,9 @@
  
 [The Effect of Resampling on Data-imbalanced Conditions for Prediction towards Nuclear Receptor Profiling Using Deep Learning](https://onlinelibrary.wiley.com/doi/full/10.1002/minf.201900131?casa_token=Z2UXtKX5KxoAAAAA%3A0DGFx0olrHAcCtuvKu8ccP0NnBDOPmU2VmqAcT-Cm_Di8l_a6IMgrZGoTX04b1U7uJZnSlaEabNHdyHyXA)
 
+[Molecular Generative Model Based on an Adversarially Regularized Autoencoder](https://pubmed.ncbi.nlm.nih.gov/31820983/)
+
+
 ## LAIDD lecture
 [화학정보학개론](https://www.laidd.org/local/ubonline/view.php?id=224&group=1&returnurl=aHR0cHM6Ly93d3cubGFpZGQub3JnL2xvY2FsL3Vib25saW5lL2luZGV4LnBocD9vcmRlcnR5cGU9cmNfZCZncm91cD0xJmtleXdvcmQ9JUVEJTk5JTk0JUVEJTk1JTk5JUVDJUEwJTk1JUVCJUIzJUI0JUVEJTk1JTk5JUVBJUIwJTlDJUVCJUExJUEwJmVucm9sX3N0YXJ0PSZlbnJvbF9lbmQ9JnN0dWR5X3N0YXJ0PSZzdHVkeV9lbmQ9)
 
