@@ -103,11 +103,123 @@ training, validation, test sets가 하나로 합쳐진 후 active/inactive로 �
 
 training set에 대해서는 cross validation 수행, internal test set으로 final validation 수행
 
-**Imbalance ratio range** : 1 : 7 ~ 1 : 32
+**Imbalance ratio range** : 1 : 7.35(ER) ~ 1 : 32.79(PPAR)
 
 12 endpoints는 이진값으로 라벨링. **NR-related assessment data**(AR, AR-LBD, ER, ER-LBD, AhR, PPAR)
 
+### Deep Learning Toxicity Prediction
+
+DL QSAR models : SCFP & FP2VEC
+
+- SMILES : standard representation of compounds - 고정된 특성의 string 형태
+- 공통점 : DeepTox, MOL2VEC보다 좋은 성능 / CNN model / Zero-padding 사용
+- **zero-padding** 사용 효과 : CNN model의 input을 고정 크기로 만들 수 있다. encoding과정 중 화학적 특성을 유지하면서 **Minority data를 shifting과 함께 augment**할 수 있음.
+    
+    zero-padding을 위한 encoding 방법 : SCFP는 SMILES symbols의 feature matrix 이후, FP2VEC은 Morgan fingerprint ‘1’로 look-up table encoding 이후
+    
+    화학 구조가 feature matrix, fingerprint embedding으로 encode될 때 zero-padding은 CNN model input의 고정된 크기를 유지할 때 필요
+    
+    zero-padding의 랜덤 사이즈가 molecular encoding 앞 또는 뒤에 붙음.
+    
+- RDkit : 화학적 특성 연산에 사용
+- SCFP : improved prediction accuracy as well as the motif detection (by conv layers에서 만들어진 feature maps 분석)
+- SCFP modification : 더 나은 feature 추출을 위해 (1) reshape feature matrix (2) reduce filter size
+    - feature matrix : 400x42 → 800x21 (odd:atom 특성, even:나머지 특성)
+    - filter size of 1st conv layer :  1x42 → 1x3에 stride 2로 바뀜. (SMILES symbols에서 feature 추출하는데 너무 큼.)
+    - maxpooling 통한 abstracting : 2x1
+    
+    장점 : feature extraction을 atom과 그 나머지 특성으로 분리하고 maxpooling으로 abstracting
+    
+    - filter size of 2nd conv layer : 10x2에 stride 1로 바뀜. average pooling은 1x9
+    - FC layer : neuron 수, ReLu, Tanh 함수
+    - output 크기 : 2 / softmax 함수가 active 여부 판정에 사용.
+- FP2VEC : multi-task learning을 사용하는 CNN-based classifier
+
+### Unbalanced Sensitivity and Specificity
+
+training model → **stratified**(계층화된) **5-fold cross-validation**. 각 fold마다 같은 active/inactive compounds 수
+
+performance analysis(train) & external validation(test) → **4 metrics(Accuracy, ROC-AUC, Sensitivity, Specificity)**
+
+GraphConv 추가 : graph convolution featurizer과 CNN-based classifier 사용. inactive chemical class weight는 제거함.
+
+**[Data-imbalanced condition + no sampling]** *(6개 NR dataset 결과의 평균)*
+
+- SCFP & FP2VEC : accuracy와 AUC는 높지만 sensitivity는 0.5보다도 낮음.
+    
+    **sensitivity**는 toxicity assessment data 분석에서 중요한 metric. **QSAR의 acceptable accuracy은 약 0.7**
+    
+- SCFP0 & SCFP : modified 버전의 sensitivity가 약간 더 상승
+    
+    more feature maps + more small-sized filters 덕분.
+    
+- GraphConv : AUC는 SCFP와 FP2VEC의 중간이지만 더 imbalanced
+
 ## Resampling: Balancing Sensitivity and Specificity
+
+Sampling 기법은 imbalanced training dataset의 문제점을 해결하기 위해 사용 → under-sampling & oversampling이 imbalance ratio를 다루기 위해 사용됨.
+
+**Resampling**은 모든 classifier로의 적용가능성을 다룰 수 있는 방법 중 하나. **training dataset에만 적용 가능.**
+
+원래 균형을 맞추며 AUC를 향상시키는 방법으로 ROC의 optimal threshold를 설정하는 방법이 있지만 resampling 했을 때보다 성능 안 좋음.
+
+- **random under-sampling(undersampling of majority data)**
+    - majority class의 data points가 랜덤하게 제거됨. (x*(minority data 수)*(majority 수) 반영)
+    - under-sampled dataset + sampling probabilities(U1, U3, U5, U7) → probability가 높으면 inactive 데이터셋 양 증가
+    - (no sampling보다) **high sensitivity, low specificity, low accuracy**(전체 accuracy는 majority 데이터셋의 감소한 sensitivity에 영향받음.)
+    - **AUC** - SCFP는 U1를 제외하고 높아짐. FP2VEC은 낮아짐.
+    - 요약 : **minority data의 accuracy 증가(specificity)** & majority data의 accuracy 감소(sensitivity)
+- **oversampling + shift augmentation(oversampling of minority data. Ox)**
+    - minority class의 data points가 **random shifting과 함께 augmented**
+        - **random shifting**은 zero-padding의 위치를 바꾸는 molecular encoding으로 구현됨.
+        - **Augmentation** → zero-padding 위치를 랜덤화는데 사용
+        - 화학 구조가 feature matrix, fingerprint embedding으로 encode될 때 zero-padding은 CNN model input의 고정된 크기를 유지할 때 필요
+    - oversampled dataset + sampling probabilities(O1, O3, O5) → **sensitivity** 증가
+    - **specificity** : SCFP는 낮아졌지만 FP2VEC은 그대로.
+    - 증가한 sensitivity는 오히려 **AUC 감소**시킴.
+- **hybrid resampling(UxOy)** : undersampling과 oversampling 동시 실행
+    - baseline(under-sampling U3, U5) + oversampling(U3O3, U5O5)
+    - **Less(limited) oversampling over under-sampling**(U3O2, U5O2, U5O3)이 더 균형을 잘 이룸. AUC loss 없이.
+    - AUC : SCFP는 낮아졌지만 FP2VEC은 그대로.
+- **two-phase learning(Ux-UyOz)** : 2 iterative training runs + 다른 데이터셋
+    - **기본 아이디어** : second phase learning에서 균형을 좀 더 맞추고 under-sampled condition에서 train할 때 inactive chemicals의 losss 최소화.
+        - pre-training : imbalance conditions(no sampling, under-sampling)에서 실행
+        - fine-tuning : 더 balanced condition에서 실행
+    - condition 1(U3-U5O2) : first phase(U3) → second phase(U5O2. over the first-phase trained model)
+    condition(U0-U3O2) 2 : first phase(no sampling) → second phase(U3O2). inactive dataset은 phase간 exclusive
+    - **SCFP** two-phase learning ↔ **hybrid**(U5O2)와 비교
+    - 결과 : U5O2와 비교해 **specificity & sensitivity 증가**. U3-U5O2는 AUC와 accuracy도 향상.
+- **mini batch retrieval** : minority data의 learning rate 증가
+    - mini-batch는 majority-minority 사이의 비율을 따름. (hybrid resampling + FP2VEC과 비교)
+    - active:inactive = 1:2 ← original fingerprint embedding + shifting augmentation이 mini batch에 1:2 비율로 계속 insert돼야 함.
+    - sensitivity(0.7) specificity(0.8) - U5O2와 비슷하거나 약간 낮은 성능
+
+### Discussion
+
+DL-based toxicity prediction models(SCFP, FP2VEC) / NR-related data in Tox21
+
+no sampling → imbalance 때문에 낮은 sensitivity (minority active dataset의 accuracy가 더 중요)
+
+Resampling methods가 sensitivity 향상, AUC 향상
+
+- hybrid method of oversampling minority dataset over under-sampling majority dataset
+- two-phase learning
+- mini batch retrieval
+
+CNN 학습에서 얻어지는 kernel → motif(functional substructure) 추출 위해 분석. feature map에서 motif discover.
+
+- SCFP에서 motif는 resampling에 상관없이 올바르게 추출
+- **FP2VEC** : 부분적으로 motif 발견 → FP2VEC에서 feature map의 해석이 더 필요함.
+- **resampling**으로 훈련된 모델은 두 모델에서 모두 motif를 올바르게 발견
+
+More complex resampling 기법
+
+- **RF** → clustering based under-sampling + synthetic oversampling for minority dataset(SMOTE)
+    
+    NR-AhR & NR-ER-LBD (Tox21) 데이터셋 사용 → well-balanced & smaller loss of accuracy & AUC
+    
+- class weight method(algorithmic learning approach) + **GraphConv**
+- **GAN** for synthetic molecular generation : SMOTE에서 좋은 성능
 
 ## Conclusion
 
@@ -130,8 +242,10 @@ DL-based models(SCFP, FP2VEC)의 **문제점**
 
 **future studies** (더 발전된 resampling 방법)
 
-- clustering based under-sampling
-- synthetic minority dataset oversampling + GAN
+- clustering based under-sampling : RF
+- synthetic minority dataset oversampling(SMOTE) : RF
+- GAN + SMOTE
+- (class weight method → GraphConv)
 
 ## Reference
 
