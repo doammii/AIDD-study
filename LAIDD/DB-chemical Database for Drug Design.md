@@ -67,6 +67,9 @@ print(qed)
 
 *FP2VEC&SA-MTL paper 참고*
 
+- Classification : Tox21 / HIV / BBBP / SIDER
+- Regression : Malaria / CEP / ESOL / FreeSolv / Lipophilicity
+
 - **Tox21** dataset
     - 8014 compounds/toxicity(label) ↔ 12 targets
         
