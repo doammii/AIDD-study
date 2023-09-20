@@ -56,6 +56,7 @@ print(qed)
 - **ZINC**
     
     virtual screening(docking)기반. (library in SMILES format for ligand-based vs)
+  - ChemicalVAE training에도 사용.(249,455 molecules randomnly selected from the drug-like subset of the ZINC dataset) - ARAE
     
 - **PDB**(Protein Data Bank)
     
@@ -65,7 +66,7 @@ print(qed)
 
 ## Dataset 종류
 
-*FP2VEC&SA-MTL paper 참고*
+*FP2VEC&SA-MTL&ARAE paper 참고*
 
 - Classification : Tox21 / HIV / BBBP / SIDER
 - Regression : Malaria / CEP / ESOL / FreeSolv / Lipophilicity
@@ -131,3 +132,7 @@ print(qed)
     - random split method
 - **Clintox** dataset
     - FDA-approved drug list + toxicity drug list
+- **QM9** dataset
+    - FDA-approved drug list + toxicity drug list
+    - 133,885 small organic molecules + 9 heavy atoms까지 포함.
+    - ARAE train/testing에도 사용.
