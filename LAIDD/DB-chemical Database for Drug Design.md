@@ -136,3 +136,8 @@ print(qed)
     - FDA-approved drug list + toxicity drug list
     - 133,885 small organic molecules + 9 heavy atoms까지 포함.
     - ARAE train/testing에도 사용.
+- **DUD-E** dataset
+    - A Database of Useful Decoys: Enhanced / (CARAE)
+    - designed to help benchmark molecular docking programs by providing challenging decoys
+    - 22,886 active compounds and their affinities against 102 targets, an average of 224 ligands per target
+    - 50 decoys for each active having similar physico-chemical properties but dissimilar 2-D topology
