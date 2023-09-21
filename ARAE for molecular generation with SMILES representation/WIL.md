@@ -21,13 +21,6 @@ single & multiple properties에 대해 성공적인 conditional generation of dr
 
 주어진 조건들을 동시에 만족하면서 active molecules의 scaffolds도 공유하는 EGFR(epidermal growth factor receptor) inhibitors도 생성 가능
 
-### 사전 지식
-
-- EGFR(epidermal growth factor receptor) : hit compounds의 de novo design에 사용 가능
-- posterior distribution - VAE
-- GAN의 “**mode-collapse problem**” 문제 : **Wasserstein distance를** 도입해서 해결 가능
-- Bayesian graph convolutional network + **EGFR** subset of the **DUD-E dataset**
-- ZINC & QM9 dataset
 
 ## Introduction
 
@@ -97,15 +90,52 @@ VAE & GAN 기반 model의 한계
 
 ### GAN
 
+- estimate distribution of **input samples ← adversarial training** of generator network & discriminator network
+- learning ~~discrete~~ representation → low-diversity problem ⇒ 분자의 distribution을 ~~data space~~보다는 **continuous latent space**로 estimate하자!
+
 ### VAE
+
+- latent variable model - distribution of latent variables(**posterior**)
+    
+    generate instances by decoding latent variables
+    
+- exact posterior distribution 대신 approximating with variational distribution(output of encoder)
+    - decoder : reconstruct inputs from the latent variables
+    - minimizing the 2nd term → 2 distribution similar → posterior distribution can be approximated by **prior distribution(predefined prior, surrogate distribution)**
+    
+    → perform explicit density estimation
+    
+- Why VAES often generate unrealistic instances?
+    - true posterior distribution may not be well approximated by a given prior(ex: multivariate Gaussian distribution)
+    - minimizing the KL divergence is not suitable - if the posterior distribution is ‘multimodal’
+    
+    **‘dead regions’** in the latent space : latent variables are decoded to invalid data points
+    
 
 ### ARAE
 
+- latent variable model : encoder-decoder architecture
+    - encoder : output the distribution of true latent variables z from the given inputs
+    - decoder : reconstruct the input from the latent variable drawn from the posterior
+- posterior distribution ← adversarial training. minimizing the 1-Wasserstein distance between true&generated latent variables
+
 ## Methods
 
-분자 구조의 SMILES representation → discrete random variable input
+- 분자 구조의 SMILES representation → **discrete** random variable input
+    
+    train/test dataset으로 QM9 & ZINC dataset 활용.
+    
+- latent representation으로 변형, distribution ← adversarial training
+    - avoid posterior collapse problem (VAEs) → high valid rate
+    - estimating the distribution of molecules in the continuous latent space → low-diversity problem
+- efficient conditional generation scheme of molecules (conditional generative model) : **conditional ARAE**
+    1. **encoder** : SMILES sequences → latent variables
+    2. **generator** : produce new samples by taking random variables
+    3. distributions of 2 variables → becomes similar by minimizing 1st, 2nd term + **gradient descent optimization**
+    - **predictor** network : estimate variational mutual information (VMI)
+    - training : **decoder** reconstructs input molecular structures & property information of input molecules
+    - inference : sample new molecules by tuning the latent vector & specifying the desired property
 
-train/test dataset으로 QM9 & ZINC dataset 활용.
 
 ### Implementation details
 
@@ -126,11 +156,76 @@ Bayesian graph convolutional network + **EGFR** subset of the **DUD-E dataset**
 
 ### Metrics
 
+- **Validity** : (number of valid molecules) / (number of generated samples) ← RDKit
+- **Uniqueness** : (number of unrepeated molecules) / (number of valid molecules)
+- **Novelty** : (number of molecules - not included in the training set) / (number of unique molecules)
+- **Novel/sample** : (number of valid, unique, novel molecules) / (number of generated samples)
+- **Diversity** : all N molecule pairs in test set에 대해 측정. 2 molecules’ similarity ← Tanimoto similarity(radius : 4, 2048 bits)
+- 3 molecular properties for conditional generations : log P, TPSA, SAS
+
 ### Performance of ARAE on Molecular Generation
+
+- training model with **QM9** dataset
+    - each epoch : 10,000 samples generated
+    - evaluation metrics **smoothly converged** : common difficulties in training GANs(mode collapse, diminished gradient) are less problematic
+- ChemicalVAE, GrammarVAE : SMILES
+    
+    GraphVAE, MolGAN : molecular graphs
+    
+    → ARAE가 **novelty**를 제외하고 outperform
+    
+- validity & uniqueness are correlated
+    - if there are many dead zones in latent space → only latent vectors from very restricted regions(can be correctly decoded to valid molecules) → low diversity & igh rebundancy
+    - wide region of latent space → higher diversity & lower rebundancy
+
+**ARAE’s low novelty : low chemical diversity of QM9 dataset 때문**
+
+- limited number of heavy atoms → novel molecules 생성 기회 제한
+- **ZINC** dataset에서는 high novelty 가능 ← ZINC dataset spans a huge chemical space
+- **MolGAN**도 adversarial training 적용 → high novelty BUT low uniqueness → **novelty/sample** 이 더 나은 metric
+    
+    Graph representation > SMILES : higher novel/sample values
+    
+
+Approximating a posterior distribution + insufficiently flexible prior → low validity(VAE)
+
+→ unrealistic molecules at interpolation points 생성 가능하다는 문제 → **latent space with the adversarial training**
+
+high membered ring molecules(from VAE-based molecular generative models) not produced by our model
 
 ### Conditional Generation of Molecules + CARAE
 
+Generate molecules + high validity, uniqueness, novelty, diversity
+
+- **designated property values**에 의해 multiple property control 성능 결정
+    - 3 target properties : log P, SAS, TPSA → 동시에
+    - ARAE와 비교했을 때 높은 **SAS** 값 빼고 유의미한 결과
+        
+        SAS : synthetic accessibility & structural stability와 연관 → 높은 SAS값에서 valid molecules의 빈도가 낮아짐. 
+        
+- simultaneous control of 3 target properties → each distribution was well localized about a given designated point & separated
+    
+    → high accuracy of CARAE model for multiple property control
+    
+
+target values(given designed points/properties)에 대해 각 latent space distribution이 localized(separated) → high accuracy of multiple property control
+
 ### De Novo Design of EGFR Inhibitors
+
+designing the novel inhibitors of an EGFR
+
+- **DUD-E** dataset(active, decoy molecules)
+- CARAE model + 4 target properties(activity against EGFR, log P, TPSA, SAS)
+
+Inhibitors generation scenarios
+
+- one activity condition - generate EGFR-active molecules only
+- 4 condiitons - molecules satisfying Lipinski’s rule of five & synthesizability
+
+evaluate EGFR inhibition activity of the generated molecules - **Bayesian graph convolutional network(Bayesian GCN)**
+
+- Bayesian GCN은 DUD-E dataset의 EGFR subset에 의해 처음으로 훈련&테스트
+- successful molecules 수는 4 conditions scenario에서 감소 ← 추가 조건들이 더 엄격한 제한사항 만듦.
 
 ## Conclusions
 
