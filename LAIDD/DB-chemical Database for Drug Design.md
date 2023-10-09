@@ -66,7 +66,7 @@ print(qed)
 
 ## Dataset 종류
 
-*FP2VEC&SA-MTL&ARAE paper 참고*
+*FP2VEC&SA-MTL&ARAE&MolGPT paper 참고*
 
 - Classification : Tox21 / HIV / BBBP / SIDER
 - Regression : Malaria / CEP / ESOL / FreeSolv / Lipophilicity
@@ -136,8 +136,12 @@ print(qed)
     - FDA-approved drug list + toxicity drug list
     - 133,885 small organic molecules + 9 heavy atoms까지 포함.
     - ARAE train/testing에도 사용.
-- **DUD-E** dataset
-    - A Database of Useful Decoys: Enhanced / (CARAE)
-    - designed to help benchmark molecular docking programs by providing challenging decoys
-    - 22,886 active compounds and their affinities against 102 targets, an average of 224 ligands per target
-    - 50 decoys for each active having similar physico-chemical properties but dissimilar 2-D topology
+- **MOSES** dataset
+    - (c)MolGPT
+    - 1.9 million clean lead-like molecules from ZINC data seta (clean Lead Collection)
+    - molecular weight ranging from 250~350 Da, number of rotatable bonds lower than 7, XlogP below 3.5
+    - created mainly to represent lead like molecules → distribution of molecules + ideal druglike properties
+- **GuacaMol** dataset
+    - MolGPT
+    - subset of ChEMBL 24 database contains 1.6 million molecules
+    - used to test property conditional generation - larger distribution of property values available in the dataset
