@@ -15,6 +15,8 @@
 
 [cMolGPT: A Conditional Generative Pre-Trained Transformer for Target-Specific De Novo Molecular Generation](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10254772/)
 
+[CMGN: a conditional molecular generation net to design target-specific molecules with desired properties](https://pubmed.ncbi.nlm.nih.gov/37193672/)
+
 
 ## LAIDD lecture
 [화학정보학개론](https://www.laidd.org/local/ubonline/view.php?id=224&group=1&returnurl=aHR0cHM6Ly93d3cubGFpZGQub3JnL2xvY2FsL3Vib25saW5lL2luZGV4LnBocD9vcmRlcnR5cGU9cmNfZCZncm91cD0xJmtleXdvcmQ9JUVEJTk5JTk0JUVEJTk1JTk5JUVDJUEwJTk1JUVCJUIzJUI0JUVEJTk1JTk5JUVBJUIwJTlDJUVCJUExJUEwJmVucm9sX3N0YXJ0PSZlbnJvbF9lbmQ9JnN0dWR5X3N0YXJ0PSZzdHVkeV9lbmQ9)
